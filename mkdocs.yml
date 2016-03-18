@@ -1,0 +1,4 @@
+site_name: drfpolicy
+site_description: An ad-hoc DRF policy service to assist with complex authorization requirements
+repo_url: https://github.com/sassoo/drfpolicy
+site_dir: html
