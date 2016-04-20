@@ -35,15 +35,21 @@ class PolicyPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         """ DRF APIView entry point for global permissions
 
-        One thing to note is `can_read` is always called even
-        if an unsafe method is being used. This is by design.
+        A few implementation details to be aware of are the
+        following:
+
+            * can_access is always called
+            * can_read is called only on safe methods
+            * can_write is called only on unsafe methods
         """
 
-        if hasattr(view.policy, 'can_read'):
-            view.policy.can_read()
+        if hasattr(view.policy, 'can_access'):
+            view.policy.can_access()
 
-        if request.method not in permissions.SAFE_METHODS:
-            if hasattr(view.policy, 'can_write'):
+        if request.method in permissions.SAFE_METHODS:
+            if hasattr(view.policy, 'can_read'):
+                view.policy.can_read()
+        elif hasattr(view.policy, 'can_write'):
                 view.policy.can_write()
 
         method = 'can_%s' % _get_action(view)
@@ -55,13 +61,10 @@ class PolicyPermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         """ DRF APIView entry point for single object permissions
 
-        Just like the global perm checks the `can_read_object`
-        method is called even if an unsafe method is being used.
-
-        An important point with this object level perm checks with
-        DRF is that these methods are all called before any data
-        is validated. Obviously, before the object is mutated as
-        well.
+        An important point with object level perm checks in DRF
+        is that called before any data is validated. Obviously,
+        before the object is mutated as well & so to are any
+        subsequent policy methods.
 
         The `validated` kwarg will be passed to the method with
         a value of False in this case. The `PolicyViewMixin` will
