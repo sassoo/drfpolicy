@@ -6,7 +6,6 @@
     authorization requirements.
 """
 
-from .filters import *
 from .mixins import *
 from .policy import *
 
