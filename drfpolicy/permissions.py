@@ -50,7 +50,7 @@ class PolicyPermission(permissions.BasePermission):
             if hasattr(view.policy, 'can_read'):
                 view.policy.can_read()
         elif hasattr(view.policy, 'can_write'):
-                view.policy.can_write()
+            view.policy.can_write()
 
         method = 'can_%s' % _get_action(view)
         if hasattr(view.policy, method):

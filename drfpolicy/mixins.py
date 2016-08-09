@@ -5,8 +5,8 @@
     DRF policy module mixins for different DRF native objects.
 """
 
-from .permissions import PolicyPermission
 from django.utils.functional import cached_property
+from .permissions import PolicyPermission
 
 
 __all__ = ('PolicyViewMixin',)
