@@ -29,3 +29,4 @@ class BasePolicy(object):
 
         self.request = request
         self.view = view
+        self.user = getattr(request, 'user')

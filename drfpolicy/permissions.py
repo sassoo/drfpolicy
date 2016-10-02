@@ -16,6 +16,9 @@
 from rest_framework import permissions
 
 
+__all__ = ('PolicyPermission',)
+
+
 def _get_action(view):
     """ Return the string action name of the view """
 

@@ -7,6 +7,7 @@
 """
 
 from .mixins import *
+from .permissions import *
 from .policy import *
 
 
