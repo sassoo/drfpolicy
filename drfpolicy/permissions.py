@@ -79,17 +79,15 @@ class PolicyPermission(permissions.BasePermission):
         It pairs well with the drfchangemgmt project.
         """
 
-        kwargs = {'validated': False}
-
         if hasattr(view.policy, 'can_read_object'):
-            view.policy.can_read_object(obj, kwargs)
+            view.policy.can_read_object(obj, validated=False)
 
         if request.method not in permissions.SAFE_METHODS:
             if hasattr(view.policy, 'can_write_object'):
-                view.policy.can_write_object(obj, kwargs)
+                view.policy.can_write_object(obj, validated=False)
 
         method = 'can_%s_object' % _get_action(view)
         if hasattr(view.policy, method):
-            getattr(view.policy, method)(obj, kwargs)
+            getattr(view.policy, method)(obj, validated=False)
 
         return True

@@ -26,7 +26,7 @@ class PolicyViewMixin(object):
     post validation. This means the object is technically
     "dirty" but validated. The `can_create_object` &
     `can_update_object` policy methods will be called with a
-    kwargs containing {'validated': True} key/val pairs.
+    validated=True argument.
     """
 
     policy_class = None
@@ -73,14 +73,12 @@ class PolicyViewMixin(object):
         """
 
         if hasattr(self.policy, 'can_create_object'):
-            kwargs = {'validated': True}
-            self.policy.can_create_object(serializer, kwargs)
+            self.policy.can_create_object(serializer, validated=True)
         return super(PolicyViewMixin, self).perform_create(serializer)
 
     def perform_update(self, serializer):
         """ Call `can_update_object` with the validated instance """
 
         if hasattr(self.policy, 'can_update_object'):
-            kwargs = {'validated': True}
-            self.policy.can_update_object(serializer.instance, kwargs)
+            self.policy.can_update_object(serializer.instance, validated=True)
         return super(PolicyViewMixin, self).perform_update(serializer)
