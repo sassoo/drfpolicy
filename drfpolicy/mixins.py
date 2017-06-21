@@ -5,80 +5,45 @@
     DRF policy module mixins for different DRF native objects.
 """
 
-from django.utils.functional import cached_property
-from .permissions import PolicyPermission
+__all__ = ('PolicyViewSetMixin',)
 
 
-__all__ = ('PolicyViewMixin',)
+class PolicyViewSetMixin:
+    """ DRF policy mixin for DRF ModelViewSet
 
-
-class PolicyViewMixin(object):
-    """ DRF policy mixin for DRF APIView & GenericAPIView
-
-    This mixin will override the native `get_permissions`
-    method to automatically include the PolicyPermission
-    object to the existing list of permissions classes. It
-    will then call the view's policy object authorization
-    hooks.
-
-    For GenericAPIView's the native perform_create & update
-    methods will call the appropriate policy check handlers
-    post validation. This means the object is technically
-    "dirty" but validated. The `can_create_object` &
-    `can_update_object` policy methods will be called with a
-    validated=True argument.
+    For DRF ModelViewSet mixins this will override the native
+    perform_create & update methods to call the appropriate
+    permission object check handlers post validation.
     """
 
-    policy_class = None
-
-    @cached_property
-    def policy(self):
-        """ Return the cached policy object instance
-
-        This can & should be used when accessing the policy.
-        It's less typing than `get_policy` & more efficient.
-        """
-
-        return self.get_policy()
-
-    def get_permissions(self):
-        """ Override DRF APIView
-
-        Force the addition of the PolicyPermission object
-        into the views permissions array. It should always
-        be called.
-        """
-
-        permissions = super(PolicyViewMixin, self).get_permissions()
-        permissions.append(PolicyPermission())
-        return permissions
-
-    def get_policy(self):
-        """ Return a policy instance from the `policy_class` property """
-
-        assert self.policy_class is not None, (
-            '"%s" should either include a `policy_class` attribute, '
-            'or override the `get_policy()` method.'
-            % self.__class__.__name__
-        )
-        # pylint: disable=not-callable
-        return self.policy_class(self.request, self)
-
     def perform_create(self, serializer):
-        """ Call can_create_object with an already validated serializer
+        """ DRF override
 
         An instance isn't available until the save has occurred
-        so the `can_create_object` method is a bit unusual in
+        so the permission hooks for creation are a bit unusual in
         this case by passing in the serializer only.
         """
 
-        if hasattr(self.policy, 'can_create_object'):
-            self.policy.can_create_object(serializer, validated=True)
-        return super(PolicyViewMixin, self).perform_create(serializer)
+        for perm in self.get_permissions():
+            try:
+                perm.can_create_valid_object(self.request, self, serializer)
+            except AttributeError:
+                continue
+
+        return super().perform_create(serializer)
 
     def perform_update(self, serializer):
-        """ Call `can_update_object` with the validated instance """
+        """ DRF override
 
-        if hasattr(self.policy, 'can_update_object'):
-            self.policy.can_update_object(serializer.instance, validated=True)
-        return super(PolicyViewMixin, self).perform_update(serializer)
+        The already validated & "dirty" object is passed to the
+        method amongst the default request & view.
+        """
+
+        obj = serializer.instance
+        for perm in self.get_permissions():
+            try:
+                perm.can_update_valid_object(self.request, self, obj)
+            except AttributeError:
+                continue
+
+        return super().perform_update(serializer)

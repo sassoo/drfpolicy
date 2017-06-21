@@ -4,13 +4,12 @@
 
     DRF policy permissions for APIView's
 
-    This makes permission handling more DRY & moves the
-    permissions to a centralized single-source-of-truth.
-    Namely, a policy object.
+    This makes permission handling more DRY & logical by
+    having logically named methods on a standard DRF
+    permission object for more robust permission checking.
 
-    The policy object can opt-in to any of the permission
-    checks by logical names. The logic on what is called &
-    when is very easily seen in the code below.
+    Including pre & post serializer validation permission
+    methods.
 """
 
 from rest_framework import permissions
@@ -46,48 +45,50 @@ class PolicyPermission(permissions.BasePermission):
             * can_write is called only on unsafe methods
         """
 
-        if hasattr(view.policy, 'can_access'):
-            view.policy.can_access()
+        try:
+            self.can_access(request, view)
+        except AttributeError:
+            pass
 
-        if request.method in permissions.SAFE_METHODS:
-            if hasattr(view.policy, 'can_read'):
-                view.policy.can_read()
-        elif hasattr(view.policy, 'can_write'):
-            view.policy.can_write()
+        try:
+            if request.method in permissions.SAFE_METHODS:
+                self.can_read(request, view)
+            else:
+                self.can_write(request, view)
+        except AttributeError:
+            pass
 
         method = 'can_%s' % _get_action(view)
-        if hasattr(view.policy, method):
-            getattr(view.policy, method)()
+        try:
+            getattr(self, method)(request, view)
+        except AttributeError:
+            pass
 
-        return True
+        return super().has_permission(request, view)
 
     def has_object_permission(self, request, view, obj):
         """ DRF APIView entry point for single object permissions
 
         An important point with object level perm checks in DRF
-        is that called before any data is validated. Obviously,
-        before the object is mutated as well & so to are any
-        subsequent policy methods.
-
-        The `validated` kwarg will be passed to the method with
-        a value of False in this case. The `PolicyViewMixin` will
-        call some of the action specific perm checks a second time
-        with a validated value of True after validation is done &
-        the object is mutated but still dirty. This makes perm
-        checks after the modification easier.
-
-        It pairs well with the drfchangemgmt project.
+        is they're called before any data is validated. Obviously,
+        before the object is mutated as well.
         """
 
-        if hasattr(view.policy, 'can_read_object'):
-            view.policy.can_read_object(obj, validated=False)
+        try:
+            self.can_read_object(request, view, obj)
+        except AttributeError:
+            pass
 
-        if request.method not in permissions.SAFE_METHODS:
-            if hasattr(view.policy, 'can_write_object'):
-                view.policy.can_write_object(obj, validated=False)
+        try:
+            if request.method not in permissions.SAFE_METHODS:
+                self.can_write_object(request, view, obj)
+        except AttributeError:
+            pass
 
         method = 'can_%s_object' % _get_action(view)
-        if hasattr(view.policy, method):
-            getattr(view.policy, method)(obj, validated=False)
+        try:
+            getattr(self, method)(request, view, obj)
+        except AttributeError:
+            pass
 
-        return True
+        return super().has_object_permission(request, view, obj)

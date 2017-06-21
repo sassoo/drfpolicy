@@ -8,7 +8,6 @@
 
 from .mixins import *
 from .permissions import *
-from .policy import *
 
 
 __version__ = '0.3.0'
