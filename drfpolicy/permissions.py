@@ -21,10 +21,12 @@ __all__ = ('PolicyPermission',)
 def _get_action(view):
     """ Return the string action name of the view """
 
-    action = view.action
-    if action == 'partial_update':
-        action = 'update'
-    return action
+    try:
+        if view.action == 'partial_update':
+            return 'update'
+        return view.action
+    except AttributeError:
+        return 'unknown'
 
 
 class PolicyPermission(permissions.BasePermission):
@@ -34,6 +36,26 @@ class PolicyPermission(permissions.BasePermission):
     level permissions.
     """
 
+    def can_access(self, request, view):
+        """ Always called before object fetch """
+
+        pass
+
+    def can_access_object(self, request, view, obj):
+        """ Always called after object fetch """
+
+        pass
+
+    def can_write(self, request, view):
+        """ Unsafe methods only before object fetch """
+
+        pass
+
+    def can_write_object(self, request, view, obj):
+        """ Unsafe methods only after object fetch """
+
+        pass
+
     def has_permission(self, request, view):
         """ DRF APIView entry point for global permissions
 
@@ -41,26 +63,17 @@ class PolicyPermission(permissions.BasePermission):
         following:
 
             * can_access is always called
-            * can_read is called only on safe methods
             * can_write is called only on unsafe methods
+            * can_unknown is a fall through if no action is found
         """
 
-        try:
-            self.can_access(request, view)
-        except AttributeError:
-            pass
+        self.can_access(request, view)
+        if request.method not in permissions.SAFE_METHODS:
+            self.can_write(request, view)
 
         try:
-            if request.method in permissions.SAFE_METHODS:
-                self.can_read(request, view)
-            else:
-                self.can_write(request, view)
-        except AttributeError:
-            pass
-
-        method = 'can_%s' % _get_action(view)
-        try:
-            getattr(self, method)(request, view)
+            method_name = 'can_%s' % _get_action(view)
+            getattr(self, method_name)(request, view)
         except AttributeError:
             pass
 
@@ -74,20 +87,13 @@ class PolicyPermission(permissions.BasePermission):
         before the object is mutated as well.
         """
 
-        try:
-            self.can_read_object(request, view, obj)
-        except AttributeError:
-            pass
+        self.can_access_object(request, view, obj)
+        if request.method not in permissions.SAFE_METHODS:
+            self.can_write_object(request, view, obj)
 
         try:
-            if request.method not in permissions.SAFE_METHODS:
-                self.can_write_object(request, view, obj)
-        except AttributeError:
-            pass
-
-        method = 'can_%s_object' % _get_action(view)
-        try:
-            getattr(self, method)(request, view, obj)
+            method_name = 'can_%s_object' % _get_action(view)
+            getattr(self, method_name)(request, view, obj)
         except AttributeError:
             pass
 
