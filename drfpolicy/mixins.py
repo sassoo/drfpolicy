@@ -5,10 +5,10 @@
     DRF policy module mixins for different DRF native objects.
 """
 
-__all__ = ('PolicyViewSetMixin',)
+__all__ = ('PolicyModelMixin',)
 
 
-class PolicyViewSetMixin:
+class PolicyModelMixin:
     """ DRF policy mixin for DRF ModelViewSet
 
     For DRF ModelViewSet mixins this will override the native
