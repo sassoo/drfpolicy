@@ -1,11 +1,9 @@
 """
-    drfpolicy.mixins
-    ~~~~~~~~~~~~~~~~
+    drfpolicy.view_mixins
+    ~~~~~~~~~~~~~~~~~~~~~
 
     DRF policy module mixins for different DRF native objects.
 """
-
-__all__ = ('PolicyModelMixin',)
 
 
 class PolicyModelMixin:
