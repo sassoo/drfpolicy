@@ -28,13 +28,14 @@ class PolicyModelMixin:
             except AttributeError:
                 continue
 
-        return super().perform_create(serializer)
+        return serializer.save()
 
     def perform_update(self, serializer):
         """ DRF override
 
         The already validated & "dirty" object is passed to the
         method amongst the default request & view.
+        XXX not true.. it's not dirtied
         """
 
         obj = serializer.instance

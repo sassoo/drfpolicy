@@ -36,22 +36,22 @@ class PolicyPermission(permissions.BasePermission):
     def can_access(self, request, view):
         """ Always called before object fetch """
 
-        pass
+        return True
 
     def can_access_object(self, request, view, obj):
         """ Always called after object fetch """
 
-        pass
+        return True
 
     def can_write(self, request, view):
         """ Unsafe methods only before object fetch """
 
-        pass
+        return True
 
     def can_write_object(self, request, view, obj):
         """ Unsafe methods only after object fetch """
 
-        pass
+        return True
 
     def has_permission(self, request, view):
         """ DRF APIView entry point for global permissions
